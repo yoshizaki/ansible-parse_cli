@@ -1,0 +1,62 @@
+---
+# IOS show ip interface brief parse
+# 
+# Command: show ip interface brief
+#
+# Example Command Output:
+# -----------------------
+# Interface              IP-Address      OK? Method Status                Protocol
+# GigabitEthernet1       192.168.1.18    YES DHCP   up                    up
+# GigabitEthernet2       unassigned      YES NVRAM  administratively down down
+# GigabitEthernet3       unassigned      YES NVRAM  administratively down down
+#
+# Example Playbook:
+# -----------------
+#  vars:
+#    iface_brief_parse_path: /path/to/ios_show_ip_interface_brief_parser.yml
+#  tasks:
+#
+#    - name: get show ip interface brief
+#      ios_command:
+#        commands: show ip interface brief
+#      register: iface_brief
+#
+#    - name: show iface_brief
+#      debug:
+#        msg: "{{ iface_brief.stdout[0] | parse_cli(iface_brief_parse_path) }}"
+#
+# Schema Output:
+# --------------
+#        "iface_brief": [
+#            {
+#                "address": "192.168.1.18",
+#                "name": "GigabitEthernet1",
+#                "protocol": "up",
+#                "status": "up"
+#            },
+#            {
+#                "address": "unassigned",
+#                "name": "GigabitEthernet2",
+#                "protocol": "down",
+#                "status": "administratively down"
+#            },
+#            {
+#                "address": "unassigned",
+#                "name": "GigabitEthernet3",
+#                "protocol": "down",
+#                "status": "administratively down"
+#            }
+#        ]
+#    }
+#
+vars:
+  iface_state:
+    name: "{{ item.name }}"
+    address: "{{ item.address }}"
+    status: "{{ item.status }}"
+    protocol: "{{ item.protocol }}"
+
+keys:
+  iface_brief:
+    value: "{{ iface_state }}"
+    items: "^(?P<name>[A-Za-z].+\\d)\\s+(?P<address>\\S+)\\s+(?P<enable>YES|NO)\\s+(?P<method>\\S+)\\s+(?P<status>\\S.+\\b)\\s+(?P<protocol>up|down)"
